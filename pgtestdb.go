@@ -35,8 +35,8 @@ func updateDBName(connectionString, newDBName string) string {
 	return strings.Join(parts, "/")
 }
 
-// Execute performs migrations and returns cleanup function that should be run on test exit.
-func (pg *PGTestDB) Execute() func() {
+// Execute performs migrations and returns created db name and cleanup function that should be run on test exit.
+func (pg *PGTestDB) Execute() (string, func()) {
 	dbCreate, errOpenCurrentConnection := sql.Open("pgx", pg.ConnectionURL)
 	require.NoError(pg.T, errOpenCurrentConnection)
 	require.NotNil(pg.T, dbCreate)
@@ -82,15 +82,16 @@ func (pg *PGTestDB) Execute() func() {
 
 	pgMigrator.Migrate(dbTest)
 
-	return func() {
-		_, errDropDB := dbCreate.Exec(
-			fmt.Sprintf(
-				`drop database %s;`,
-				dbName,
-			),
-		)
-		require.NoError(pg.T, errDropDB)
+	return dbName,
+		func() {
+			_, errDropDB := dbCreate.Exec(
+				fmt.Sprintf(
+					`drop database %s;`,
+					dbName,
+				),
+			)
+			require.NoError(pg.T, errDropDB)
 
-		dbCreate.Close()
-	}
+			dbCreate.Close()
+		}
 }

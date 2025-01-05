@@ -8,6 +8,7 @@ import (
 
 	pgtestdb "github.com/TudorHulban/pgtestdb"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPGTestDB(t *testing.T) {
@@ -39,7 +40,9 @@ func TestPGTestDB(t *testing.T) {
 	}
 
 	// pgTest.Execute()
-	cleanUp := pgTest.Execute()
+	dbName, cleanUp := pgTest.Execute()
+	require.NotZero(t, dbName)
+
 	defer cleanUp()
 
 	// run test operations
