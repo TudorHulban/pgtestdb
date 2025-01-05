@@ -3,6 +3,7 @@ package migration
 import (
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"regexp"
 )
 
@@ -17,7 +18,11 @@ func load(directory fs.FS, regex *regexp.Regexp) (migrations, error) {
 				return errReadFile
 			}
 
-			if !regex.MatchString(path) {
+			if d.IsDir() {
+				return nil
+			}
+
+			if !regex.MatchString(filepath.Base(path)) {
 				return nil
 			}
 

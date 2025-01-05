@@ -34,7 +34,7 @@ func TestPGTestDB(t *testing.T) {
 
 		// RegexValidationMigrationFile: sql.NullString{
 		// 	Valid:  true,
-		// 	String: `^V\d{4}_[a-zA-Z0-9_]+\.sql$`,
+		// 	String: `^V\d{4}_[a-zA-Z0-9]+\.sql$`,
 		// },
 	}
 

@@ -45,14 +45,21 @@ func NewPGMigrator(params *ParamsNewPGMigrator) *PGMigrator {
 		regex = params.RegexValidationMigrationFile.String
 	}
 
-	regexCompiled := regexp.MustCompile(regex)
+	regexObject := regexp.MustCompile(regex)
 
 	for _, directory := range params.Directories {
 		buf, errLoad := load(
 			directory,
-			regexCompiled,
+			regexObject,
 		)
-		require.NoError(params.T, errLoad)
+		require.NoError(
+			params.T,
+			errLoad,
+			fmt.Sprintf(
+				"issues loading migrations from folder: %s",
+				directory,
+			),
+		)
 
 		migrations = append(migrations, buf...)
 	}
