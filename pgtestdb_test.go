@@ -42,8 +42,9 @@ func TestPGTestDB(t *testing.T) {
 	// pgTest.Execute()
 	dbName, cleanUp := pgTest.Execute()
 	require.NotZero(t, dbName)
-
-	defer cleanUp()
+	// if not interested in keeping db in case of test failure - defer cleanUp()
 
 	// run test operations
+
+	cleanUp() // interested in keeping the db in case of test failure.
 }

@@ -16,4 +16,5 @@ This naming convention can be overridden by passing the desired regex.
 
 ### How to integrate with your code
 
-See external test file.  
+Database could be created as in the makefile target.  
+For tests see external test file.  
