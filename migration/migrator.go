@@ -15,7 +15,7 @@ import (
 )
 
 const _MigrationsTableName = "aaa_migrations"
-const _MsgErrorRollback = "rollback executed"
+const _MsgErrorRollback = "rollback executed due to migration issue"
 const _DefaultValidationRegex = `^V\d{4}__[a-zA-Z0-9_]+\.sql$`
 
 type PGMigrator struct {
