@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/TudorHulban/pgtestdb/migration"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/require"
 )
 
