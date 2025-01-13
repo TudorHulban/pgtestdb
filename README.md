@@ -2,7 +2,7 @@
 
 ## Overview
 
-The library creates a test database and runs migrations on it.  
+The library creates a test database and runs migrations or fixtures on it.  
 In case test run fails, the database is not deleted. The database naming convention is "t" plus unix time seconds plus the test name.
 
 The migration info is written in a table which name can be overriden.
