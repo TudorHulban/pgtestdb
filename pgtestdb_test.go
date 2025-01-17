@@ -44,6 +44,8 @@ func TestPGTestDB(t *testing.T) {
 	require.NotZero(t, dbName)
 	defer cleanUp()
 
+	t.Log(dbName)
+
 	// run test operations
 
 	// debug onlu - cleanUp()
