@@ -42,11 +42,15 @@ func TestPGTestDB(t *testing.T) {
 	// pgTest.Execute()
 	dbName, cleanUp := pgTest.Execute()
 	require.NotZero(t, dbName)
-	defer cleanUp()
+	// defer cleanUp() - up to when test becomes stable
 
 	t.Log(dbName)
 
 	// run test operations
 
-	// debug onlu - cleanUp()
+	t.Cleanup(
+		func() {
+			cleanUp()
+		},
+	)
 }
