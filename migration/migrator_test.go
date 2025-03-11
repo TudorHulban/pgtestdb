@@ -42,6 +42,8 @@ func TestMigrator(t *testing.T) {
 
 		DBUser:     "postgres",
 		DBPassword: "password",
+
+		DBName: "tara_crm",
 	}
 
 	db, errOpen := sql.Open(

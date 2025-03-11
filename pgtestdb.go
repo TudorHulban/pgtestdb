@@ -19,24 +19,17 @@ type PGTestDB struct {
 	RegexValidationMigrationFile sql.NullString // default is `^V\d{4}__[a-zA-Z0-9_]+\.sql$`
 	MigrationsTableName          sql.NullString // overrides default name
 
+	TemplateRenderFunction func(string) (string, error)
+	TemplateFilePaths      []string
+
 	MigrationDirectories []fs.FS
 	MigrationFilePaths   []string
-	T                    *testing.T
+
+	T *testing.T
 }
 
-func updateDBName(connectionString, newDBName string) string {
-	parts := strings.Split(connectionString, "/")
-	if len(parts) > 3 {
-		parts[len(parts)-1] = fmt.Sprintf(
-			"%s?",
-			newDBName,
-		)
-	}
-
-	return strings.Join(parts, "/")
-}
-
-// Execute performs migrations and returns created db name and cleanup function that should be run on test exit.
+// Execute performs migrations and returns created db name and cleanup function
+// that should be run on test exit.
 func (pg *PGTestDB) Execute() (string, func()) {
 	dbCreate, errOpenCurrentConnection := sql.Open("pgx", pg.ConnectionURL)
 	require.NoError(pg.T, errOpenCurrentConnection)
@@ -57,7 +50,7 @@ func (pg *PGTestDB) Execute() (string, func()) {
 	)
 	require.NoError(pg.T, errCreateDB)
 
-	connectionNewDB := updateDBName(
+	connectionNewDB := updateDBNameInConnection(
 		pg.ConnectionURL,
 		dbName,
 	)
@@ -72,6 +65,9 @@ func (pg *PGTestDB) Execute() (string, func()) {
 		&migration.ParamsNewPGMigrator{
 			MigrationsTableName:          pg.MigrationsTableName,
 			RegexValidationMigrationFile: pg.RegexValidationMigrationFile,
+
+			TemplateFilePaths:      pg.TemplateFilePaths,
+			TemplateRenderFunction: pg.TemplateRenderFunction,
 
 			Directories: pg.MigrationDirectories,
 			FilePaths:   pg.MigrationFilePaths,

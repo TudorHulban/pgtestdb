@@ -19,8 +19,7 @@ const _MsgErrorRollback = "rollback executed due to migration issue"
 const _DefaultValidationRegex = `^V\d{4}__[a-zA-Z0-9_]+\.sql$`
 
 type PGMigrator struct {
-	migrationsTableName          string
-	regexValidationMigrationFile sql.NullString
+	migrationsTableName string
 	migrations
 
 	T *testing.T
@@ -29,6 +28,9 @@ type PGMigrator struct {
 type ParamsNewPGMigrator struct {
 	MigrationsTableName          sql.NullString
 	RegexValidationMigrationFile sql.NullString
+
+	TemplateRenderFunction func(string) (string, error)
+	TemplateFilePaths      []string
 
 	Directories []fs.FS
 	FilePaths   []string
@@ -40,41 +42,35 @@ func NewPGMigrator(params *ParamsNewPGMigrator) *PGMigrator {
 	var migrations migrations
 
 	regex := _DefaultValidationRegex
-
 	if params.RegexValidationMigrationFile.Valid {
 		regex = params.RegexValidationMigrationFile.String
 	}
-
 	regexObject := regexp.MustCompile(regex)
 
 	for _, directory := range params.Directories {
-		buf, errLoad := load(
-			directory,
-			regexObject,
-		)
-		require.NoError(
-			params.T,
+		buf, errLoad := load(directory, regexObject)
+		require.NoError(params.T,
 			errLoad,
-			fmt.Sprintf(
-				"issues loading migrations from folder: %s",
-				directory,
-			),
+			fmt.Sprintf("issues loading migrations from folder: %s", directory),
 		)
 
-		migrations = append(migrations, buf...)
+		migrations = append(
+			migrations,
+			buf...,
+		)
 	}
 
 	migrations.SortByID()
 
 	for _, filePath := range params.FilePaths {
 		content, errRead := os.ReadFile(filePath)
-		require.NoError(
-			params.T,
+		require.NoError(params.T,
 			errRead,
 			fmt.Errorf("failed to read file: %w", errRead),
 		)
 
-		migrations = append(migrations,
+		migrations = append(
+			migrations,
 			migration{
 				ID:  filepath.Base(filePath),
 				SQL: string(content),
@@ -82,8 +78,27 @@ func NewPGMigrator(params *ParamsNewPGMigrator) *PGMigrator {
 		)
 	}
 
-	migrationsTableName := _MigrationsTableName
+	if params.TemplateRenderFunction != nil && len(params.TemplateFilePaths) > 0 {
+		for _, templateFilePath := range params.TemplateFilePaths {
+			renderedSQL, errRender := params.TemplateRenderFunction(templateFilePath)
+			require.NoError(params.T,
+				errRender,
+				fmt.Errorf("failed to render template %s: %w", templateFilePath, errRender),
+			)
 
+			migrations = append(
+				migrations,
+				migration{
+					ID:  filepath.Base(templateFilePath),
+					SQL: renderedSQL,
+				},
+			)
+		}
+	}
+
+	migrations.SortByID()
+
+	migrationsTableName := _MigrationsTableName
 	if params.MigrationsTableName.Valid {
 		migrationsTableName = params.MigrationsTableName.String
 	}

@@ -1,10 +1,12 @@
 package pgtestdb_test
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"os"
 	"testing"
+	"text/template"
 
 	pgtestdb "github.com/TudorHulban/pgtestdb"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -12,6 +14,26 @@ import (
 )
 
 func TestPGTestDB(t *testing.T) {
+	f := func(filePath string) (string, error) {
+		tpl, errParse := template.ParseFiles(filePath)
+		if errParse != nil {
+			return "", errParse
+		}
+
+		var buf bytes.Buffer
+
+		if errExecute := tpl.Execute(
+			&buf,
+			map[string]string{
+				"TableName": "tableD",
+			},
+		); errExecute != nil {
+			return "", errExecute
+		}
+
+		return buf.String(), nil
+	}
+
 	pgTest := pgtestdb.PGTestDB{
 		ConnectionURL: fmt.Sprintf(
 			"postgres://%s:%s@%s:%s/%s?",
@@ -19,7 +41,7 @@ func TestPGTestDB(t *testing.T) {
 			"password",
 			"localhost",
 			"5471",
-			"",
+			"tara_crm",
 		),
 
 		MigrationDirectories: []fs.FS{
@@ -29,6 +51,12 @@ func TestPGTestDB(t *testing.T) {
 
 		MigrationFilePaths: []string{
 			"pgmigrator_test.sql",
+		},
+
+		TemplateRenderFunction: f,
+
+		TemplateFilePaths: []string{
+			"pgmigrator_template_test.sql",
 		},
 
 		T: t,
